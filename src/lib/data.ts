@@ -1,6 +1,6 @@
 import "server-only";
 import { hasSupabaseConfig } from "./supabase/client";
-import { createClient as createServerSupabase } from "./supabase/server";
+import { createAnonClient } from "./supabase/anon";
 import { mockCities, mockLocations, mockProducts, mockSightings } from "./mockData";
 import type { Product, Location, SightingWithJoins } from "./types";
 
@@ -13,7 +13,7 @@ import type { Product, Location, SightingWithJoins } from "./types";
 
 export async function getAllProducts(): Promise<Product[]> {
   if (!hasSupabaseConfig) return mockProducts;
-  const supabase = await createServerSupabase();
+  const supabase = createAnonClient();
   const { data, error } = await supabase.from("products").select("*").order("name");
   if (error) throw error;
   return data as Product[];
@@ -21,7 +21,7 @@ export async function getAllProducts(): Promise<Product[]> {
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   if (!hasSupabaseConfig) return mockProducts.find((p) => p.slug === slug) ?? null;
-  const supabase = await createServerSupabase();
+  const supabase = createAnonClient();
   const { data, error } = await supabase.from("products").select("*").eq("slug", slug).maybeSingle();
   if (error) throw error;
   return data as Product | null;
@@ -31,7 +31,7 @@ export type City = { name: string; slug: string; country: string };
 
 export async function getCities(): Promise<City[]> {
   if (!hasSupabaseConfig) return mockCities;
-  const supabase = await createServerSupabase();
+  const supabase = createAnonClient();
   const { data, error } = await supabase
     .from("locations")
     .select("city, city_slug, country")
@@ -50,7 +50,7 @@ export async function getCities(): Promise<City[]> {
 
 export async function getLocationsForCity(citySlug: string): Promise<Location[]> {
   if (!hasSupabaseConfig) return mockLocations.filter((l) => l.city_slug === citySlug);
-  const supabase = await createServerSupabase();
+  const supabase = createAnonClient();
   const { data, error } = await supabase.from("locations").select("*").eq("city_slug", citySlug);
   if (error) throw error;
   return data as Location[];
@@ -80,7 +80,7 @@ export async function getSightingsForProductInCity(
       .sort((a, b) => +new Date(b.reported_at) - +new Date(a.reported_at));
   }
 
-  const supabase = await createServerSupabase();
+  const supabase = createAnonClient();
   const { data, error } = await supabase
     .from("sightings")
     .select("*, product:products!inner(*), location:locations!inner(*)")
@@ -101,7 +101,7 @@ export async function getSightingsForLocation(locationId: string): Promise<Sight
         location: mockLocations.find((l) => l.id === locationId)!,
       }));
   }
-  const supabase = await createServerSupabase();
+  const supabase = createAnonClient();
   const { data, error } = await supabase
     .from("sightings")
     .select("*, product:products(*), location:locations(*)")
@@ -125,7 +125,7 @@ export async function getAllProductCityPairs(): Promise<{ productSlug: string; c
       return { productSlug, citySlug };
     });
   }
-  const supabase = await createServerSupabase();
+  const supabase = createAnonClient();
   const { data, error } = await supabase
     .from("sightings")
     .select("product:products(slug), location:locations(city_slug)");

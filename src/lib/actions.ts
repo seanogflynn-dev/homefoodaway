@@ -134,6 +134,45 @@ export async function confirmSighting(sightingId: string): Promise<ActionResult>
   return { ok: true };
 }
 
+/**
+ * Saves a piece of free-form site feedback (the floating "Feedback" tab).
+ * Unlike the sighting actions above, this deliberately works whether or not
+ * you're signed in — a feedback widget that gatekeeps on login defeats the
+ * point of one-click feedback. If signed in, we attach the user id so you
+ * can see who said what in the Supabase Table Editor.
+ */
+export async function submitFeedback(input: {
+  message: string;
+  rating?: number | null;
+  pagePath?: string | null;
+  contactEmail?: string | null;
+}): Promise<ActionResult> {
+  if (!hasSupabaseConfig) {
+    return { ok: false, error: "Connect Supabase first — see the README — before feedback can be saved." };
+  }
+
+  const message = input.message.trim();
+  if (!message) {
+    return { ok: false, error: "Say a little about what's on your mind first." };
+  }
+
+  const supabase = await createServerSupabase();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { error } = await supabase.from("feedback").insert({
+    message,
+    rating: input.rating ?? null,
+    page_path: input.pagePath ?? null,
+    contact_email: input.contactEmail?.trim() || null,
+    user_id: user?.id ?? null,
+  });
+
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
 /** Flags a sighting as no longer accurate — the product wasn't found there. */
 export async function reportNotFound(sightingId: string): Promise<ActionResult> {
   if (!hasSupabaseConfig) {

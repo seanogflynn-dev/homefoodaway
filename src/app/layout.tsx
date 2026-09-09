@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
 import { HeaderAuth } from "@/components/HeaderAuth";
+import { FeedbackWidget } from "@/components/FeedbackWidget";
 
 export const metadata: Metadata = {
   title: "HomeFoodAway — find your home-country food abroad",
@@ -25,6 +26,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <footer className="border-t border-neutral-200 bg-white py-6 text-center text-sm text-neutral-500">
           HomeFoodAway — v1 scaffold. Ireland-origin products, one city at a time.
         </footer>
+        <FeedbackWidget />
       </body>
     </html>
   );
